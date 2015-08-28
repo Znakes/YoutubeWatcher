@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace YuInfoRetriever.Authorization
 {
-    class JsonFileAuthProvider : IAuthProvider
+    public class JsonFileAuthProvider : IAuthProvider
     {
         public string JsonFileWithSecret { get; private set; }
 
@@ -19,16 +19,22 @@ namespace YuInfoRetriever.Authorization
         /// </remarks>
         /// </summary>
         /// <param name="filename"></param>
-        public JsonFileAuthProvider(string filename)
-        {
-            Contract.Requires(File.Exists(filename));
-            JsonFileWithSecret = filename;
-        }
+        public JsonFileAuthProvider()
+        {}
         
         public Stream GetAuthDataStream()
-        {
+        { 
             Contract.Requires(!String.IsNullOrEmpty(JsonFileWithSecret));
+
             return new FileStream(JsonFileWithSecret, FileMode.Open, FileAccess.Read);
+        }
+
+        public void SetParams(object param)
+        {
+            Contract.Requires(param!=null);
+            Contract.Requires(File.Exists(param.ToString()));
+
+            JsonFileWithSecret = param.ToString(); 
         }
     }
 }
