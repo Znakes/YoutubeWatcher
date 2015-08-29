@@ -80,7 +80,7 @@ namespace YoutubeWatcher.ViewModel
                 youRetriever.Disconnect();
 
             var jsonReader = SimpleIoc.Default.GetInstance<IAuthProvider>();
-            jsonReader.SetParams("client_secrets.json");
+            jsonReader.SetParams(@"D://client_secrets.json");
 
             bool result = await youRetriever.Authorize(jsonReader);
 

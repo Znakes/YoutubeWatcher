@@ -17,9 +17,7 @@ namespace YoutubeWatcher
             InitializeComponent();
         }
 
-        public ObservableCollection<Channel> PlayListItem { get; set; }
-
-        private async void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
+        private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
         {
 
         }
