@@ -26,6 +26,7 @@ namespace Youtube
     {
         #region Fields
         private UserCredential _credential;
+        private YouTubeService _youtubeService;
         #endregion
 
         #region Properties
@@ -67,7 +68,8 @@ namespace Youtube
         {
             IsAuthorized = false;
             _credential = null;
-
+            _youtubeService.Dispose();
+            _youtubeService = null;
         }
 
 
@@ -75,44 +77,40 @@ namespace Youtube
 
 
         /// <summary>
-        /// Gets information from Youtube Api.v3
+        /// Gets subsription list
         /// </summary>
-        /// <param name="fileName"></param>
         /// <returns></returns>
-        public async Task<IEnumerable<Channel>> GetPlaylist(string fileName)
+        public async Task<IEnumerable<Subscription>> GetSubscriptions()
         {
             Contract.Requires(IsAuthorized);
 
-            var youtubeService = new YouTubeService(new BaseClientService.Initializer()
+            _youtubeService = new YouTubeService(new BaseClientService.Initializer()
             {
                 HttpClientInitializer = _credential,
                 ApplicationName = "YoutubeWatcher"
             });
 
 
-            var channelsListRequest = youtubeService.Subscriptions.List("snippet");
+            var channelsListRequest = _youtubeService.Subscriptions.List("snippet");
             channelsListRequest.Mine = true;
 
             // Retrieve the contentDetails part of the channel resource for the authenticated user's channel.
             var channelsListResponse = await channelsListRequest.ExecuteAsync();
 
 
-
+            return channelsListResponse.Items.ToArray();
 
             foreach (Subscription channel in channelsListResponse.Items)
             {
                 // From the API response, extract the playlist ID that identifies the list
                 // of videos uploaded to the authenticated user's channel.
-
-
-
+                
                 var resourceListId = channel.Snippet.ResourceId.ChannelId;
-
-
+                
                 Console.WriteLine(@"Videos in list {0}", resourceListId);
 
 
-                var plOfUser = youtubeService.Playlists.List("snippet");
+                var plOfUser = _youtubeService.Playlists.List("snippet");
                 plOfUser.ChannelId = resourceListId;
 
                 var playlists = await plOfUser.ExecuteAsync();
@@ -125,7 +123,7 @@ namespace Youtube
                     var nextPageToken = "";
                     while (nextPageToken != null)
                     {
-                        var playlistItemsListRequest = youtubeService.PlaylistItems.List("snippet");
+                        var playlistItemsListRequest = _youtubeService.PlaylistItems.List("snippet");
                         playlistItemsListRequest.PlaylistId = uploadsListId;
                         playlistItemsListRequest.MaxResults = 50;
                         playlistItemsListRequest.PageToken = nextPageToken;
@@ -145,6 +143,61 @@ namespace Youtube
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Gets List of channel playlists
+        /// </summary>
+        /// <param name="playlistId">Id of playlist</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<IEnumerable<PlaylistItem>> GetPlayListItems(string playlistId, CancellationToken cancellationToken)
+        {
+            Contract.Assert(_youtubeService != null);
+            Contract.Assert(IsAuthorized);
+
+            return await Task.Run(() =>
+            {
+                var uploadsListId = playlistId;
+                List<PlaylistItem> playlistItems = new List<PlaylistItem>();
+                var nextPageToken = "";
+                while (nextPageToken != null)
+                {
+                    if(cancellationToken.IsCancellationRequested)
+                        break;
+
+                    var playlistItemsListRequest = _youtubeService.PlaylistItems.List("snippet");
+                    playlistItemsListRequest.PlaylistId = uploadsListId;
+                    playlistItemsListRequest.MaxResults = 50;
+                    playlistItemsListRequest.PageToken = nextPageToken;
+
+                    // Retrieve the list of videos uploaded to the authenticated user's channel.
+                    PlaylistItemListResponse playlistItemsListResponse = playlistItemsListRequest.Execute();
+
+                    playlistItems.AddRange(playlistItemsListResponse.Items.ToArray());
+                    nextPageToken = playlistItemsListResponse.NextPageToken;
+                }
+
+                return playlistItems;
+            }, cancellationToken);
+        }
+
+        /// <summary>
+        /// Gets List of channel playlists
+        /// </summary>
+        /// <param name="channelId">Id of channel</param>
+        /// <returns></returns>
+        public async Task<IEnumerable<Playlist>> GetPlayLists(string channelId)
+        {
+            Contract.Assert(_youtubeService != null);
+            Contract.Assert(IsAuthorized);
+
+            var plOfUser = _youtubeService.Playlists.List("snippet");
+            plOfUser.ChannelId = channelId;
+
+            var playlists = await plOfUser.ExecuteAsync();
+
+            return playlists.Items.ToArray();
         }
 
 

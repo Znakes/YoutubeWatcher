@@ -20,6 +20,7 @@
         <Expander Grid.Row="0" Grid.Column="0" Background="#FFE63333">
             <StackPanel>
                 <Button Command="{Binding ConnectCommand}" Content="Connect"/>
+                <Button Command="{Binding SubscriptionsCommand}" Content="GetSubscriptions"/>
             </StackPanel>
         </Expander>
     </Grid>

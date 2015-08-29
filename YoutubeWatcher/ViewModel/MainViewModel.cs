@@ -1,9 +1,13 @@
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics.Contracts;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Ioc;
-using Ninject;
+using Google.Apis.YouTube.v3.Data;
 using Youtube;
 using YuInfoRetriever.Authorization;
 
@@ -40,6 +44,7 @@ namespace YoutubeWatcher.ViewModel
             ////    // Code runs "for real"
             ////}
             
+            Subscriptions = new ObservableCollection<Subscription>();
         }
 
 
@@ -56,6 +61,11 @@ namespace YoutubeWatcher.ViewModel
             }
         }
 
+        public ObservableCollection<Subscription> Subscriptions { get; set; }
+
+
+        
+
         #endregion
 
 
@@ -64,23 +74,56 @@ namespace YoutubeWatcher.ViewModel
         /// <summary>
         /// Connects to Youtube Auth 2.0 service
         /// </summary>
-        private void Command()
+        private async Task Connect()
         {
             if (youRetriever.IsAuthorized)
                 youRetriever.Disconnect();
 
             var jsonReader = SimpleIoc.Default.GetInstance<IAuthProvider>();
             jsonReader.SetParams("client_secrets.json");
-            youRetriever.Authorize(jsonReader).ContinueWith(t=> { Status = "Authorizated succesfully"; }).ConfigureAwait(false);
+
+            bool result = await youRetriever.Authorize(jsonReader);
+
+            if (result)
+                Status = "Authorizated succesfully";
+            else
+                Status = "Authorizated failed";
         }
 
+        private async Task GetSubscriptions()
+        {
+            Contract.Assert(youRetriever != null && youRetriever.IsAuthorized);
+
+            IEnumerable<Subscription> subscriptions =  await youRetriever.GetSubscriptions();
+
+            foreach (var subscription in subscriptions)
+            {
+                Subscriptions.Add(subscription);
+            }
+        }
 
         #endregion
 
 
         #region Commands
 
-        public ICommand ConnectCommand => new RelayCommand(Command);
+        private RelayCommand _connect;
+
+        public ICommand ConnectCommand
+        {
+            get { return (_connect = _connect ?? new RelayCommand(async () => { await Connect(); })); }
+        }
+
+
+        private RelayCommand _subscriptions;
+
+        public ICommand SubscriptionsCommand
+        {
+            get
+            {
+                return (_subscriptions = _subscriptions ?? new RelayCommand(async () => { await GetSubscriptions(); }));
+            }
+        }
 
         #endregion
     }
