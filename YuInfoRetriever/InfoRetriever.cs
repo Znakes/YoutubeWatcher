@@ -21,7 +21,6 @@ namespace Youtube
     /// <summary>
     /// Retrieve information from Youtube by Avi.v3
     /// </summary>
-    [VisibleForTestOnly]
     public class YInfoRetriever
     {
         #region Fields
@@ -145,6 +144,7 @@ namespace Youtube
             Contract.Assert(IsAuthorized);
 
             var plOfUser = _youtubeService.Playlists.List("snippet");
+            plOfUser.MaxResults = 50;
             plOfUser.ChannelId = channelId;
 
             var playlists = await plOfUser.ExecuteAsync();

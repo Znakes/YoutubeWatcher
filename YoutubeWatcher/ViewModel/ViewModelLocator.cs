@@ -15,6 +15,7 @@
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Ioc;
 using Microsoft.Practices.ServiceLocation;
+using Youtube;
 using YuInfoRetriever.Authorization;
 
 namespace YoutubeWatcher.ViewModel
@@ -45,7 +46,7 @@ namespace YoutubeWatcher.ViewModel
 
             SimpleIoc.Default.Register<MainViewModel>();
             SimpleIoc.Default.Register<IAuthProvider, JsonFileAuthProvider>(false);
-
+            SimpleIoc.Default.Register<YInfoRetriever>();
             
         }
 
