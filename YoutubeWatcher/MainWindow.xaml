@@ -1,9 +1,9 @@
 ﻿<Window x:Class="YoutubeWatcher.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:data="clr-namespace:Google.Apis.YouTube.v3.Data;assembly=Google.Apis.YouTube.v3"
         xmlns:viewModel="clr-namespace:YoutubeWatcher.ViewModel"
         BorderBrush="Black" BorderThickness="1"
+        Background="#FFA62525"
         DataContext="{Binding Source={StaticResource Locator}, Path=Main}"
         Title="MainWindow" Height="573.221" Width="812.461" Loaded="MainWindow_OnLoaded">
     <Grid>
@@ -18,11 +18,16 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <StatusBar Background="#FFA62525" Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2">
-            <Label Content="{Binding Status}" />
+            <Label Foreground="White" FontWeight="SemiBold" Content="{Binding Status}" />
         </StatusBar>
 
-        <Menu Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" />
-        
+        <Menu Foreground="White" Padding="3"  Background="#FFA62525" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
+            <MenuItem Header="Connect">
+                <MenuItem  Command="{Binding ConnectCommand}" Header="Connect"></MenuItem>
+                <MenuItem  Command="{Binding SubscriptionsCommand}" Header="Refresh"></MenuItem>
+            </MenuItem>
+        </Menu>
+
         <Expander Panel.ZIndex="2" Padding="0" Background="#FFA62525" ExpandDirection="Right" Grid.Row="0" Grid.Column="0" Grid.RowSpan="4" Margin="-3,-1,0,37">
             <StackPanel Orientation="Horizontal">
                 <StackPanel Margin="5">
@@ -98,6 +103,6 @@
             <Button Width="50" Content="-&gt;" />
         </StackPanel>
 
-        <WebBrowser Name="Browser" Grid.Row="1" Grid.Column="1" Margin="0,0,0,0" Source="http://youtube.com" Grid.RowSpan="2" ></WebBrowser>
+        <WebBrowser  Name="Browser" Grid.Row="1" Grid.Column="1" Margin="0,0,0,0" Source="http://youtube.com" Grid.RowSpan="2" ></WebBrowser>
     </Grid>
 </Window>

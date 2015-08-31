@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics.Contracts;
+using System.Reflection;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using Google.Apis.YouTube.v3.Data;
 using Youtube;
+using YoutubeWatcher.ErrorHandler;
 using YoutubeWatcher.ViewModel;
 
 namespace YoutubeWatcher
@@ -23,7 +25,12 @@ namespace YoutubeWatcher
 
         private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
         {
+            Browser.Navigated += Browser_Navigated;
+        }
 
+        private void Browser_Navigated(object sender, System.Windows.Navigation.NavigationEventArgs e)
+        {
+            SilentHelper.SetSilent(Browser, true);
         }
 
         private async void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -71,9 +78,6 @@ namespace YoutubeWatcher
                     this.Browser.Source = new Uri(string.Format(@"{0}{1}", baseUrl, appendix));
                 }
             }
-
-            
-
         }
     }
 }
