@@ -8,60 +8,96 @@
         Title="MainWindow" Height="573.221" Width="812.461" Loaded="MainWindow_OnLoaded">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="1*"/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="211*"/>
             <RowDefinition Height="40"/>
+            <RowDefinition Height="40" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="85"/>
-            <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="523*"/>
-            <ColumnDefinition Width="85"/>
+            <ColumnDefinition Width="auto" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <StatusBar Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="5">
-            <Label Content="{Binding Status}"/>
+        <StatusBar Background="#FFA62525" Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2">
+            <Label Content="{Binding Status}" />
         </StatusBar>
-        <Expander Grid.Row="0" Grid.Column="0" Background="#FFE63333">
-            <StackPanel>
-                <Button Command="{Binding ConnectCommand}" Content="Connect"/>
-                <Button Command="{Binding SubscriptionsCommand}" Content="GetSubscriptions"/>
-            </StackPanel>
-        </Expander>
-        <Expander Grid.Row="0" Grid.Column="1" ExpandDirection="Right"   Background="#FFE63333">
-            <StackPanel>
-                <ListBox SelectionChanged="Selector_OnSelectionChanged" ItemsSource="{Binding Subscriptions}" IsSynchronizedWithCurrentItem="True" >
-                    <ListBox.ItemTemplate>
-                        <DataTemplate DataType="viewModel:SubscriptionEx">
-                            <StackPanel  Orientation="Horizontal">
-                                <Label Content="{Binding Subscription.Snippet.Title}"></Label>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </StackPanel>
-        </Expander>
-        <DockPanel Grid.Row="0" LastChildFill="True" Grid.Column="2">
-            <Button DockPanel.Dock="Bottom" Background="Red" >
-                <Button.Content>
-                    <Image Height="20" Source="Resources/Images/Refresh.png"></Image>
-                </Button.Content>
-            </Button>
-            <Expander  ExpandDirection="Right"  Background="#FFE63333">
-            <ContentControl Content="{Binding Subscriptions}" >
-                <ContentControl.ContentTemplate>
-                    <DataTemplate>
-                        <ListBox ItemsSource="{Binding Playlists}" IsSynchronizedWithCurrentItem="True">
+
+        <Menu Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" />
+        
+        <Expander Panel.ZIndex="2" Padding="0" Background="#FFA62525" ExpandDirection="Right" Grid.Row="0" Grid.Column="0" Grid.RowSpan="4" Margin="-3,-1,0,37">
+            <StackPanel Orientation="Horizontal">
+                <StackPanel Margin="5">
+                    <Button Command="{Binding ConnectCommand}" Content="Connect"  Margin="5"/>
+                    <Button Command="{Binding SubscriptionsCommand}" Content="GetSubscriptions" Margin="5" />
+                </StackPanel>
+                <Expander  IsExpanded="True" Grid.Row="0" Grid.Column="1" ExpandDirection="Right" Background="#FFE63333" BorderBrush="#FFD32C2C">
+                    <StackPanel>
+                        <ListBox SelectionChanged="Selector_OnSelectionChanged" ItemsSource="{Binding Subscriptions}"
+                                 IsSynchronizedWithCurrentItem="True">
                             <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <Label Content="{Binding Snippet.Title}"></Label>
+                                <DataTemplate DataType="viewModel:SubscriptionEx">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Label Content="{Binding Subscription.Snippet.Title}" />
+                                    </StackPanel>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
-                    </DataTemplate>
-                </ContentControl.ContentTemplate>
-            </ContentControl>
+                    </StackPanel>
+                </Expander>
+                <DockPanel Grid.Row="0" LastChildFill="True" Grid.Column="2">
+                    <Button DockPanel.Dock="Bottom" Background="Red">
+                        <Button.Content>
+                            <Image Height="20" Source="Resources/Images/Refresh.png" />
+                        </Button.Content>
+                    </Button>
+                    <Expander IsExpanded="True" ExpandDirection="Right" Background="#FFE63333">
+                        <ContentControl Name="PlayListContent" Content="{Binding Subscriptions}">
+                            <ContentControl.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <ListBox SelectionChanged="PlaylistListBox_OnSelectionChanged"
+                                                 ItemsSource="{Binding Playlists}" IsSynchronizedWithCurrentItem="True">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Label Content="{Binding Playlist.Snippet.Title}" />
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                        <Expander IsExpanded="True" ExpandDirection="Right" Background="#FFE63333">
+                                            <ContentControl Content="{Binding Playlists}">
+                                                <ContentControl.ContentTemplate>
+                                                    <DataTemplate>
+                                                        <ListBox
+                                                            SelectionChanged="PlaylistItem_OnSelectionChanged"
+                                                            ItemsSource="{Binding PlaylistItems,  UpdateSourceTrigger=PropertyChanged}"
+                                                            IsSynchronizedWithCurrentItem="True">
+                                                            <ListBox.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                        <Image Width="40" Height="Auto" Source="{Binding Snippet.Thumbnails.Default__.Url}"></Image>
+                                                                        <Label Content="{Binding Snippet.Title}" />
+                                                                    </StackPanel>
+                                                                </DataTemplate>
+                                                            </ListBox.ItemTemplate>
+                                                        </ListBox>
+                                                    </DataTemplate>
+                                                </ContentControl.ContentTemplate>
+                                            </ContentControl>
+                                        </Expander>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ContentControl.ContentTemplate>
+                        </ContentControl>
+                    </Expander>
+                </DockPanel>
+            </StackPanel>
         </Expander>
-            
-        </DockPanel>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="2" Grid.Column="1" Margin="306,0,326,0">
+            <Button Width="50" Content="&lt;-" />
+            <Button Width="50" Content="[]" />
+            <Button Width="50" Content="-&gt;" />
+        </StackPanel>
+
+        <WebBrowser Name="Browser" Grid.Row="1" Grid.Column="1" Margin="0,0,0,0" Source="http://youtube.com" Grid.RowSpan="2" ></WebBrowser>
     </Grid>
 </Window>

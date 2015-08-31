@@ -44,7 +44,7 @@ namespace Youtube
         /// <returns></returns>
         public async Task<bool> Authorize(IAuthProvider authProvider)
         {
-            Contract.Requires(authProvider != null);
+            //Contract.Requires(authProvider != null);
 
             using (var stream = authProvider.GetAuthDataStream())
             {
@@ -87,6 +87,7 @@ namespace Youtube
 
 
             var channelsListRequest = _youtubeService.Subscriptions.List("snippet");
+            channelsListRequest.MaxResults = 50;
             channelsListRequest.Mine = true;
 
             // Retrieve the contentDetails part of the channel resource for the authenticated user's channel.
