@@ -106,12 +106,15 @@ namespace YoutubeWatcher.ViewModel
             {
                 Status = "Authorizated succesfully";
                 IsConnected = true;
+                await GetSubscriptions();
             }
             else
             {
                 Status = "Authorizated failed";
                 IsConnected = false;
             }
+
+            
         }
 
         private async Task GetSubscriptions()

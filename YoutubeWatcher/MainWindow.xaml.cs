@@ -5,6 +5,8 @@ using System.Reflection;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using Google.Apis.YouTube.v3.Data;
 using Youtube;
 using YoutubeWatcher.ErrorHandler;
@@ -35,7 +37,7 @@ namespace YoutubeWatcher
 
         private async void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var listBox = sender as ListBox;
+            var listBox = sender as Selector;
             if (listBox != null)
             {
                 var subsEx = (listBox.SelectedItem as SubscriptionEx);
@@ -43,14 +45,16 @@ namespace YoutubeWatcher
                 if (subsEx != null)
                 {
                     if (!subsEx.PlayListsAreLoaded)
+                    {
                         await subsEx.RefreshPlayLists();
+                    }
                 }
             }
         }
 
         private async void PlaylistListBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var listBox = sender as ListBox;
+            var listBox = sender as Selector;
             if (listBox != null)
             {
                 var plEx = (listBox.SelectedItem as PlaylistEx);
@@ -67,7 +71,7 @@ namespace YoutubeWatcher
         {
             var baseUrl = @"http://www.youtube.com/watch?v=";
 
-            var listBox = sender as ListBox;
+            var listBox = sender as Selector;
             if (listBox != null)
             {
                 var plItem = (listBox.SelectedItem as PlaylistItem);
@@ -77,6 +81,15 @@ namespace YoutubeWatcher
                     var appendix = plItem.Snippet.ResourceId.VideoId;
                     this.Browser.Source = new Uri(string.Format(@"{0}{1}", baseUrl, appendix));
                 }
+            }
+        }
+
+        private void FrameworkElement_OnSourceUpdated(object sender, DataTransferEventArgs e)
+        {
+            var listBox = sender as Selector;
+            if (listBox != null)
+            {
+                listBox.SelectedIndex = 0;
             }
         }
     }

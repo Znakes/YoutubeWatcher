@@ -2,10 +2,20 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:viewModel="clr-namespace:YoutubeWatcher.ViewModel"
+        xmlns:youtubeWatcher="clr-namespace:YoutubeWatcher"
         BorderBrush="Black" BorderThickness="1"
         Background="#FFA62525"
         DataContext="{Binding Source={StaticResource Locator}, Path=Main}"
         Title="MainWindow" Height="573.221" Width="812.461" Loaded="MainWindow_OnLoaded">
+    <Window.Resources>
+        <Style x:Key="HideableComboBox" TargetType="ComboBox">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Items.Count}" Value="0">
+                    <Setter Property="Visibility" Value="Collapsed"></Setter>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -26,76 +36,59 @@
                 <MenuItem  Command="{Binding ConnectCommand}" Header="Connect"></MenuItem>
                 <MenuItem  Command="{Binding SubscriptionsCommand}" Header="Refresh"></MenuItem>
             </MenuItem>
-        </Menu>
 
-        <Expander Panel.ZIndex="2" Padding="0" Background="#FFA62525" ExpandDirection="Right" Grid.Row="0" Grid.Column="0" Grid.RowSpan="4" Margin="-3,-1,0,37">
-            <StackPanel Orientation="Horizontal">
-                <StackPanel Margin="5">
-                    <Button Command="{Binding ConnectCommand}" Content="Connect"  Margin="5"/>
-                    <Button Command="{Binding SubscriptionsCommand}" Content="GetSubscriptions" Margin="5" />
-                </StackPanel>
-                <Expander  IsExpanded="True" Grid.Row="0" Grid.Column="1" ExpandDirection="Right" Background="#FFE63333" BorderBrush="#FFD32C2C">
-                    <StackPanel>
-                        <ListBox SelectionChanged="Selector_OnSelectionChanged" ItemsSource="{Binding Subscriptions}"
+            <ComboBox  Height="40" Margin="10,0" VerticalContentAlignment="Center" Padding="0" SelectedIndex="0" SelectionChanged="Selector_OnSelectionChanged" ItemsSource="{Binding Subscriptions}"
                                  IsSynchronizedWithCurrentItem="True">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate DataType="viewModel:SubscriptionEx">
-                                    <StackPanel Orientation="Horizontal">
-                                        <Label Content="{Binding Subscription.Snippet.Title}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </StackPanel>
-                </Expander>
-                <DockPanel Grid.Row="0" LastChildFill="True" Grid.Column="2">
-                    <Button DockPanel.Dock="Bottom" Background="Red">
-                        <Button.Content>
-                            <Image Height="20" Source="Resources/Images/Refresh.png" />
-                        </Button.Content>
-                    </Button>
-                    <Expander IsExpanded="True" ExpandDirection="Right" Background="#FFE63333">
-                        <ContentControl Name="PlayListContent" Content="{Binding Subscriptions}">
-                            <ContentControl.ContentTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <ListBox SelectionChanged="PlaylistListBox_OnSelectionChanged"
-                                                 ItemsSource="{Binding Playlists}" IsSynchronizedWithCurrentItem="True">
-                                            <ListBox.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Label Content="{Binding Playlist.Snippet.Title}" />
-                                                </DataTemplate>
-                                            </ListBox.ItemTemplate>
-                                        </ListBox>
-                                        <Expander IsExpanded="True" ExpandDirection="Right" Background="#FFE63333">
-                                            <ContentControl Content="{Binding Playlists}">
-                                                <ContentControl.ContentTemplate>
-                                                    <DataTemplate>
-                                                        <ListBox
+                <ComboBox.ItemTemplate>
+                    <DataTemplate DataType="viewModel:SubscriptionEx">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Width="auto" Height="40" Source="{Binding Subscription.Snippet.Thumbnails.Default__.Url}" />
+                            <Label Content="{Binding Subscription.Snippet.Title}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <ContentControl Margin="10,0" Height="40"   Content="{Binding Subscriptions}">
+                <ContentControl.ContentTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <ComboBox Style="{StaticResource HideableComboBox}" SelectedIndex="0" MinWidth="50" SelectionChanged="PlaylistListBox_OnSelectionChanged"
+                                                 ItemsSource="{Binding Playlists}"   IsSynchronizedWithCurrentItem="True">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                        <Image Width="auto" Height="40" Source="{Binding Playlist.Snippet.Thumbnails.Default__.Url}" />
+                                        <Label Content="{Binding Playlist.Snippet.Title}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <ContentControl Margin="35,0,0,0" MinWidth="50" Content="{Binding Playlists}">
+                                <ContentControl.ContentTemplate>
+                                    <DataTemplate>
+                                        <ComboBox
+                                                            Style="{StaticResource HideableComboBox}"
+                                                            SelectedIndex="0"
                                                             SelectionChanged="PlaylistItem_OnSelectionChanged"
                                                             ItemsSource="{Binding PlaylistItems,  UpdateSourceTrigger=PropertyChanged}"
                                                             IsSynchronizedWithCurrentItem="True">
-                                                            <ListBox.ItemTemplate>
-                                                                <DataTemplate>
-                                                                    <StackPanel Orientation="Horizontal">
-                                                                        <Image Width="40" Height="Auto" Source="{Binding Snippet.Thumbnails.Default__.Url}"></Image>
-                                                                        <Label Content="{Binding Snippet.Title}" />
-                                                                    </StackPanel>
-                                                                </DataTemplate>
-                                                            </ListBox.ItemTemplate>
-                                                        </ListBox>
-                                                    </DataTemplate>
-                                                </ContentControl.ContentTemplate>
-                                            </ContentControl>
-                                        </Expander>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ContentControl.ContentTemplate>
-                        </ContentControl>
-                    </Expander>
-                </DockPanel>
-            </StackPanel>
-        </Expander>
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Image Width="auto" Height="40" Source="{Binding Snippet.Thumbnails.Default__.Url}"></Image>
+                                                        <Label Content="{Binding Snippet.Title}" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                    </DataTemplate>
+                                </ContentControl.ContentTemplate>
+                            </ContentControl>
+                        </StackPanel>
+                    </DataTemplate>
+                </ContentControl.ContentTemplate>
+            </ContentControl>
+        </Menu>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="2" Grid.Column="1" Margin="306,0,326,0">
             <Button Width="50" Content="&lt;-" />
