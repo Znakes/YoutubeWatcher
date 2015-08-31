@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -14,10 +12,10 @@ namespace YuInfoRetriever.Tests
     public class InforetrieverTests
     {
         [TestMethod]
-        [ExpectedException(typeof(System.NullReferenceException))]
+        [ExpectedException(typeof (NullReferenceException))]
         public async Task CheckAuthorization_Failed()
         {
-            YInfoRetriever manager = new YInfoRetriever();
+            var manager = new YInfoRetriever();
 
             await manager.Authorize(null);
         }
@@ -25,7 +23,7 @@ namespace YuInfoRetriever.Tests
         [TestMethod]
         public async Task CheckAuthorization_Succeed()
         {
-            YInfoRetriever manager = new YInfoRetriever();
+            var manager = new YInfoRetriever();
 
             var fileProvaider = new JsonFileAuthProvider();
             fileProvaider.SetParams(@"D://client_secrets.json");
@@ -38,7 +36,7 @@ namespace YuInfoRetriever.Tests
         [TestMethod]
         public async Task CheckGettingChannels()
         {
-            YInfoRetriever manager = new YInfoRetriever();
+            var manager = new YInfoRetriever();
 
             var fileProvaider = new JsonFileAuthProvider();
             fileProvaider.SetParams(@"D://client_secrets.json");
@@ -54,7 +52,7 @@ namespace YuInfoRetriever.Tests
         [TestMethod]
         public async Task CheckGettingPlaylists()
         {
-            YInfoRetriever manager = new YInfoRetriever();
+            var manager = new YInfoRetriever();
 
             var fileProvaider = new JsonFileAuthProvider();
             fileProvaider.SetParams(@"D://client_secrets.json");
@@ -75,7 +73,7 @@ namespace YuInfoRetriever.Tests
         [TestMethod]
         public async Task CheckGettingPlaylistItems()
         {
-            YInfoRetriever manager = new YInfoRetriever();
+            var manager = new YInfoRetriever();
 
             var fileProvaider = new JsonFileAuthProvider();
             fileProvaider.SetParams(@"D://client_secrets.json");
@@ -99,6 +97,5 @@ namespace YuInfoRetriever.Tests
 
             Assert.IsNotNull(items);
         }
-
     }
 }

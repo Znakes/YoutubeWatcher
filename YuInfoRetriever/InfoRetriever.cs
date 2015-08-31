@@ -86,7 +86,7 @@ namespace Youtube
             });
 
 
-            var channelsListRequest = _youtubeService.Subscriptions.List("snippet");
+            var channelsListRequest = _youtubeService.Subscriptions.List("snippet,contentDetails");
             channelsListRequest.MaxResults = 50;
             channelsListRequest.Mine = true;
 
@@ -96,6 +96,31 @@ namespace Youtube
 
             return channelsListResponse.Items.ToArray();
         }
+
+
+        public async Task<IEnumerable<Channel>> GetChannelsFromSubscriptions(IEnumerable<Subscription> subscriptions)
+        {
+            Contract.Requires(IsAuthorized);
+
+            _youtubeService = new YouTubeService(new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = _credential,
+                ApplicationName = "YoutubeWatcher"
+            });
+
+
+            var channelsListRequest = _youtubeService.Channels.List("snippet,contentDetails");
+            channelsListRequest.Id = String.Join(",", subscriptions.Select(s=>s.Snippet.ResourceId.ChannelId));
+            channelsListRequest.MaxResults = 50;
+            //channelsListRequest.Mine = true;
+
+            // Retrieve the contentDetails part of the channel resource for the authenticated user's channel.
+            var channelsListResponse = await channelsListRequest.ExecuteAsync();
+
+
+            return channelsListResponse.Items.ToArray();
+        } 
+
 
         /// <summary>
         /// Gets List of channel playlists
@@ -118,7 +143,7 @@ namespace Youtube
                     if(cancellationToken.IsCancellationRequested)
                         break;
 
-                    var playlistItemsListRequest = _youtubeService.PlaylistItems.List("snippet");
+                    var playlistItemsListRequest = _youtubeService.PlaylistItems.List("snippet,contentDetails");
                     playlistItemsListRequest.PlaylistId = uploadsListId;
                     playlistItemsListRequest.MaxResults = 50;
                     playlistItemsListRequest.PageToken = nextPageToken;
@@ -144,9 +169,27 @@ namespace Youtube
             Contract.Assert(_youtubeService != null);
             Contract.Assert(IsAuthorized);
 
-            var plOfUser = _youtubeService.Playlists.List("snippet");
+            var plOfUser = _youtubeService.Playlists.List("snippet,contentDetails");
             plOfUser.MaxResults = 50;
             plOfUser.ChannelId = channelId;
+
+            var playlists = await plOfUser.ExecuteAsync();
+
+            return playlists.Items.ToArray();
+        }
+
+        /// <summary>
+        /// Gets List of channel playlists
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IEnumerable<Playlist>> GetPlayList(string playlistId)
+        {
+            Contract.Assert(_youtubeService != null);
+            Contract.Assert(IsAuthorized);
+
+            var plOfUser = _youtubeService.Playlists.List("snippet,contentDetails");
+            plOfUser.Id = playlistId;
+            plOfUser.MaxResults = 50;
 
             var playlists = await plOfUser.ExecuteAsync();
 

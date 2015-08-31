@@ -17,9 +17,10 @@ namespace YoutubeWatcher.ViewModel
             PlaylistItems = new ObservableCollection<PlaylistItem>();
         }
 
+
         public bool PlayListsItemsAreLoaded { get; set; }
 
-        public Subscription Subscription { get; set; }
+        public Channel Subscription { get; set; }
 
         /// <summary>
         /// Gets or sets original <see cref="Playlist"/>

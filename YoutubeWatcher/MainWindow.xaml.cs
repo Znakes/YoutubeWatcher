@@ -40,7 +40,7 @@ namespace YoutubeWatcher
             var listBox = sender as Selector;
             if (listBox != null)
             {
-                var subsEx = (listBox.SelectedItem as SubscriptionEx);
+                var subsEx = (listBox.SelectedItem as ChannelEx);
 
                 if (subsEx != null)
                 {

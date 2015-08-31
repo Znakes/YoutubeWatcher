@@ -43,7 +43,7 @@ namespace YoutubeWatcher.ViewModel
             ////}
 
             youRetriever = SimpleIoc.Default.GetInstance<YInfoRetriever>();
-            Subscriptions = new ObservableCollection<SubscriptionEx>();
+            Subscriptions = new ObservableCollection<ChannelEx>();
             Connect().ConfigureAwait(false);
             Contract.ContractFailed += Contract_ContractFailed;
         }
@@ -82,7 +82,7 @@ namespace YoutubeWatcher.ViewModel
         }
 
 
-        public ObservableCollection<SubscriptionEx> Subscriptions { get; set; }
+        public ObservableCollection<ChannelEx> Subscriptions { get; set; }
 
         #endregion
 
@@ -97,10 +97,10 @@ namespace YoutubeWatcher.ViewModel
             if (youRetriever.IsAuthorized)
                 youRetriever.Disconnect();
 
-            var jsonReader = SimpleIoc.Default.GetInstance<IAuthProvider>();
-            jsonReader.SetParams(@"D://client_secrets.json");
+            //var jsonReader = SimpleIoc.Default.GetInstance<IAuthProvider>();
+            //jsonReader.SetParams(@"D://client_secrets.json");
 
-            var result = await youRetriever.Authorize(jsonReader);
+            var result = await youRetriever.Authorize(new ResourceStream());
 
             if (result)
             {
@@ -128,10 +128,13 @@ namespace YoutubeWatcher.ViewModel
             }
 
             var subscriptions = await youRetriever.GetSubscriptions();
+            var channels = await youRetriever.GetChannelsFromSubscriptions(subscriptions);
+            
             Subscriptions.Clear();
-            foreach (var subscription in subscriptions)
+
+            foreach (var channel in channels)
             {
-                var ex = new SubscriptionEx {Subscription = subscription};
+                var ex = new ChannelEx {Channel = channel};
                 Subscriptions.Add(ex);
             }
         }
