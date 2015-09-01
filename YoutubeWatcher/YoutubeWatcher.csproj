@@ -178,7 +178,7 @@
     <Compile Include="Behaviours\BrowserBehaviour.cs" />
     <Compile Include="ErrorHandler\IOleServiceProvider.cs" />
     <Compile Include="ErrorHandler\SilentHelper.cs" />
-    <Compile Include="ResourceStream.cs" />
+    <Compile Include="Resources\ResourceStream.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\PlaylistEx.cs" />
     <Compile Include="ViewModel\ChannelEx.cs" />
