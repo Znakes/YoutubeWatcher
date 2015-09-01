@@ -1,12 +1,14 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Ioc;
+using Google.Apis.YouTube.v3.Data;
 using Youtube;
 using YuInfoRetriever.Authorization;
 
@@ -81,6 +83,53 @@ namespace YoutubeWatcher.ViewModel
             }
         }
 
+        private PlaylistEx _currentPlaylist;
+
+        /// <summary>
+        /// Gets or sets current selected PlayList
+        /// </summary>
+        public PlaylistEx CurrentPlaylist
+        {
+            get { return _currentPlaylist; }
+            set
+            {
+                _currentPlaylist = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private PlaylistItem _currentPlaylistItem;
+
+        /// <summary>
+        /// Gets or sets current selected playlist item (video)
+        /// </summary>
+        public PlaylistItem CurrentPlaylistItem
+        {
+            get { return _currentPlaylistItem; }
+            set
+            {
+                _currentPlaylistItem = value;
+                RaisePropertyChanged();
+            }
+        }
+
+
+        private PlaylistItem _currentChannel;
+
+        /// <summary>
+        /// Gets or sets current selected channel
+        /// </summary>
+        public PlaylistItem CurrentChannel
+        {
+            get { return _currentChannel; }
+            set
+            {
+                _currentChannel = value;
+                RaisePropertyChanged();
+            }
+        }
+
+
 
         public ObservableCollection<ChannelEx> Subscriptions { get; set; }
 
@@ -97,10 +146,10 @@ namespace YoutubeWatcher.ViewModel
             if (youRetriever.IsAuthorized)
                 youRetriever.Disconnect();
 
-            //var jsonReader = SimpleIoc.Default.GetInstance<IAuthProvider>();
-            //jsonReader.SetParams(@"D://client_secrets.json");
+            var keyReader = SimpleIoc.Default.GetInstance<IAuthProvider>();
+            keyReader.SetParams(@"Resources/client_secrets.json");
 
-            var result = await youRetriever.Authorize(new ResourceStream());
+            var result = await youRetriever.Authorize(keyReader);
 
             if (result)
             {
