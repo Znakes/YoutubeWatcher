@@ -39,7 +39,7 @@ namespace YoutubeWatcher.ViewModel
             {
                 var res = await you.GetPlayListItems(plId, cancellationToken);
 
-                return res;
+                return res.OrderByDescending(r=>r.Snippet.PublishedAt.Value.Date);
             }
             return null;
         }

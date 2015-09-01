@@ -48,7 +48,7 @@ namespace YoutubeWatcher.ViewModel
 
             youRetriever = SimpleIoc.Default.GetInstance<YInfoRetriever>();
             Subscriptions = new ObservableCollection<ChannelEx>();
-            WatchedItems = new List<PlaylistItem>(1000);
+            WatchedItems = new List<string>(1000);
             Connect().ConfigureAwait(false);
             Contract.ContractFailed += Contract_ContractFailed;
         }
@@ -142,7 +142,7 @@ namespace YoutubeWatcher.ViewModel
             }
         }
 
-        public List<PlaylistItem> WatchedItems { get; set; }
+        public List<string> WatchedItems { get; set; }
 
         public ObservableCollection<ChannelEx> Subscriptions
         {
@@ -193,14 +193,14 @@ namespace YoutubeWatcher.ViewModel
                     if (CurrentPlaylistItem == null)
                         CurrentPlaylistItem = CurrentPlaylist.PlaylistItems.First();
 
-                    if(!WatchedItems.Contains(CurrentPlaylistItem))
-                        WatchedItems.Add(CurrentPlaylistItem);
+                    if(!WatchedItems.Contains(CurrentPlaylistItem.Snippet.ResourceId.VideoId))
+                        WatchedItems.Add(CurrentPlaylistItem.Snippet.ResourceId.VideoId);
 
                     var startIndex = CurrentPlaylist.PlaylistItems.IndexOf(CurrentPlaylistItem);
                     bool foundUnwatched = false;
                     for (int i = startIndex+1; i < CurrentPlaylist.PlaylistItems.Count; i++)
                     {
-                        if (!WatchedItems.Contains(CurrentPlaylist.PlaylistItems[i]))
+                        if (!WatchedItems.Contains(CurrentPlaylist.PlaylistItems[i].Snippet.ResourceId.VideoId))
                         {
                             foundUnwatched = true;
                             CurrentPlaylistItem = CurrentPlaylist.PlaylistItems[i];
@@ -212,7 +212,7 @@ namespace YoutubeWatcher.ViewModel
                     {
                         for (int i = 0; i < startIndex-1; i++)
                         {
-                            if (!WatchedItems.Contains(CurrentPlaylist.PlaylistItems[i]))
+                            if (!WatchedItems.Contains(CurrentPlaylist.PlaylistItems[i].Snippet.ResourceId.VideoId))
                             {
                                 foundUnwatched = true;
                                 
@@ -278,7 +278,7 @@ namespace YoutubeWatcher.ViewModel
                 youRetriever.GetPlayListItems(yourChannel.ContentDetails.RelatedPlaylists.WatchHistory,
                     CancellationToken.None);
             WatchedItems.Clear();
-            WatchedItems.AddRange(watched);
+            WatchedItems.AddRange(watched.Select(w=>w.Snippet.ResourceId.VideoId));
         }
 
         #endregion

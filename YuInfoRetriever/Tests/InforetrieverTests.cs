@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -96,6 +97,47 @@ namespace YuInfoRetriever.Tests
             var items = await manager.GetPlayListItems(pl.Id, CancellationToken.None);
 
             Assert.IsNotNull(items);
+        }
+
+
+        [TestMethod]
+        public async Task CheckIntersection()
+        {
+            var manager = new YInfoRetriever();
+
+            var fileProvaider = new JsonFileAuthProvider();
+            fileProvaider.SetParams(@"D://client_secrets.json");
+
+            await manager.Authorize(fileProvaider);
+
+            var sub = await manager.GetSubscriptions();
+            if (!sub.Any())
+                return;
+
+            var channel = sub.First();
+
+            var plList = await manager.GetPlayLists(channel.Snippet.ResourceId.ChannelId);
+
+            if (!plList.Any())
+                return;
+
+            var pl = plList.First();
+
+            var items = await manager.GetPlayListItems(pl.Id, CancellationToken.None);
+
+            var me = await manager.GetOwnChannel();
+
+            var watched = await manager.GetPlayListItems(me.ContentDetails.RelatedPlaylists.WatchHistory, CancellationToken.None);
+
+            var someItersection = watched.Select(w=>w.Id).Intersect(items.Select(i=>i.Id));
+
+
+            foreach (var item in someItersection)
+            {
+                Debug.Print(item);
+            }
+            Assert.IsTrue(someItersection.Any());
+            Assert.IsNotNull(someItersection);
         }
     }
 }

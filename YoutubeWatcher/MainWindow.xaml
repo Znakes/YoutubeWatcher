@@ -94,7 +94,7 @@
                             <!-- Playlists list !-->
                             <ComboBox Name="Box" Style="{StaticResource HideableComboBox}" SelectedIndex="0"
                                           MinWidth="50"
-                                          SelectedItem="{Binding Source={StaticResource Locator}, Path=Main.CurrentChannel, Mode=TwoWay}"
+                                          SelectedItem="{Binding Source={StaticResource Locator}, Path=Main.CurrentPlaylist, Mode=TwoWay}"
                                           SelectionChanged="PlaylistListBox_OnSelectionChanged"
                                           ItemsSource="{Binding Playlists}" IsSynchronizedWithCurrentItem="True">
                                 <ComboBox.ItemTemplate>
