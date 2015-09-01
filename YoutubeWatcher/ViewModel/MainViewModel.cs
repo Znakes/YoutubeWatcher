@@ -78,6 +78,7 @@ namespace YoutubeWatcher.ViewModel
             {
                 _status = value;
                 RaisePropertyChanged();
+                RaisePropertyChanged();
             }
         }
 
@@ -195,6 +196,10 @@ namespace YoutubeWatcher.ViewModel
         {
             //await Task.Run(() =>
             //{
+            if (!WatchedItems.Any())
+                return;
+
+
             if (IsConnected && CurrentPlaylist != null)
             {
                 if (CurrentPlaylistItem == null)

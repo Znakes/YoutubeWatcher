@@ -5,6 +5,7 @@ using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -85,16 +86,24 @@ namespace Youtube
                 ApplicationName = "YoutubeWatcher"
             });
 
+            List<Subscription> channels = new List<Subscription>();
+            var nextPageToken = "";
+            while (nextPageToken != null)
+            {
 
-            var channelsListRequest = _youtubeService.Subscriptions.List("snippet,contentDetails");
-            channelsListRequest.MaxResults = 50;
-            channelsListRequest.Mine = true;
+                var channelsListRequest = _youtubeService.Subscriptions.List("snippet,contentDetails");
+                channelsListRequest.MaxResults = 50;
+                channelsListRequest.Mine = true;
+                channelsListRequest.PageToken = nextPageToken;
 
-            // Retrieve the contentDetails part of the channel resource for the authenticated user's channel.
-            var channelsListResponse = await channelsListRequest.ExecuteAsync();
+                // Retrieve the list of videos uploaded to the authenticated user's channel.
+                SubscriptionListResponse channelsListResponse = await channelsListRequest.ExecuteAsync();
 
+                channels.AddRange(channelsListResponse.Items.ToArray());
+                nextPageToken = channelsListResponse.NextPageToken;
+            }
 
-            return channelsListResponse.Items.ToArray();
+            return channels.ToArray();
         }
 
 
@@ -109,17 +118,35 @@ namespace Youtube
             });
 
 
-            var channelsListRequest = _youtubeService.Channels.List("snippet,contentDetails");
-            channelsListRequest.Id = String.Join(",", subscriptions.Select(s=>s.Snippet.ResourceId.ChannelId));
-            channelsListRequest.MaxResults = 50;
-            //channelsListRequest.Mine = true;
+            //var channelsListRequest = _youtubeService.Channels.List("snippet,contentDetails");
+            //channelsListRequest.Id = String.Join(",", subscriptions.Select(s=>s.Snippet.ResourceId.ChannelId));
+            //channelsListRequest.MaxResults = 50;
+            ////channelsListRequest.Mine = true;
 
-            // Retrieve the contentDetails part of the channel resource for the authenticated user's channel.
-            var channelsListResponse = await channelsListRequest.ExecuteAsync();
+            //// Retrieve the contentDetails part of the channel resource for the authenticated user's channel.
+            //var channelsListResponse = await channelsListRequest.ExecuteAsync();
 
 
-            return channelsListResponse.Items.ToArray();
-        } 
+            var channels = new List<Channel>();
+            var nextPageToken = "";
+            while (nextPageToken != null)
+            {
+
+                var channelsListRequest = _youtubeService.Channels.List("snippet,contentDetails");
+                channelsListRequest.Id = String.Join(",", subscriptions.Select(s => s.Snippet.ResourceId.ChannelId));
+                channelsListRequest.MaxResults = 50;
+                channelsListRequest.PageToken = nextPageToken;
+
+                // Retrieve the list of videos uploaded to the authenticated user's channel.
+                var channelsListResponse = await channelsListRequest.ExecuteAsync();
+
+                channels.AddRange(channelsListResponse.Items.ToArray());
+                nextPageToken = channelsListResponse.NextPageToken;
+            }
+
+
+            return channels.ToArray();
+        }
 
 
         /// <summary>
@@ -127,13 +154,13 @@ namespace Youtube
         /// </summary>
         /// <param name="playlistId">Id of playlist</param>
         /// <param name="cancellationToken"></param>
+        /// <param name="reportProgress">returns amount of items recved</param>
         /// <returns></returns>
-        public async Task<IEnumerable<PlaylistItem>>    GetPlayListItems(string playlistId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<PlaylistItem>>    GetPlayListItems(string playlistId, CancellationToken cancellationToken, Action<double> reportProgress = null)
         {
             Contract.Assert(_youtubeService != null);
             Contract.Assert(IsAuthorized);
 
-            return await Task.Run(() =>
             {
                 var uploadsListId = playlistId;
                 List<PlaylistItem> playlistItems = new List<PlaylistItem>();
@@ -147,16 +174,28 @@ namespace Youtube
                     playlistItemsListRequest.PlaylistId = uploadsListId;
                     playlistItemsListRequest.MaxResults = 50;
                     playlistItemsListRequest.PageToken = nextPageToken;
+                    
 
                     // Retrieve the list of videos uploaded to the authenticated user's channel.
-                    PlaylistItemListResponse playlistItemsListResponse = playlistItemsListRequest.Execute();
+                    var playlistItemsListResponse =  await playlistItemsListRequest.ExecuteAsync(cancellationToken);
+
+
 
                     playlistItems.AddRange(playlistItemsListResponse.Items.ToArray());
+
+                    if (reportProgress != null)
+                    {
+                        Debug.Assert(playlistItemsListResponse.PageInfo.TotalResults != null, "playlistItemsListResponse.PageInfo.TotalResults != null");
+                        reportProgress(playlistItems.Count*100 / (double)playlistItemsListResponse.PageInfo.TotalResults);
+                    }
+
                     nextPageToken = playlistItemsListResponse.NextPageToken;
                 }
 
+
+                if (reportProgress != null) reportProgress(100.0);
                 return playlistItems;
-            }, cancellationToken);
+            }
         }
 
         /// <summary>
@@ -168,14 +207,31 @@ namespace Youtube
         {
             Contract.Assert(_youtubeService != null);
             Contract.Assert(IsAuthorized);
+            //var plOfUser = _youtubeService.Playlists.List("snippet,contentDetails");
+            //plOfUser.MaxResults = 50;
+            //plOfUser.ChannelId = channelId;
 
-            var plOfUser = _youtubeService.Playlists.List("snippet,contentDetails");
-            plOfUser.MaxResults = 50;
-            plOfUser.ChannelId = channelId;
+            //var playlists = await plOfUser.ExecuteAsync();
 
-            var playlists = await plOfUser.ExecuteAsync();
+            var playlists = new List<Playlist>();
+            var nextPageToken = "";
+            while (nextPageToken != null)
+            {
 
-            return playlists.Items.ToArray();
+                var plOfUser = _youtubeService.Playlists.List("snippet,contentDetails");
+                plOfUser.MaxResults = 50;
+                plOfUser.ChannelId = channelId;
+                plOfUser.PageToken = nextPageToken;
+
+                // Retrieve the list of videos uploaded to the authenticated user's channel.
+                var playlistItemsListResponse = await plOfUser.ExecuteAsync();
+
+                playlists.AddRange(playlistItemsListResponse.Items.ToArray());
+                nextPageToken = playlistItemsListResponse.NextPageToken;
+            }
+
+
+            return playlists.ToArray();
         }
 
         /// <summary>
@@ -189,7 +245,7 @@ namespace Youtube
 
             var plOfUser = _youtubeService.Playlists.List("snippet,contentDetails");
             plOfUser.Id = playlistId;
-            plOfUser.MaxResults = 50;
+            plOfUser.MaxResults = 1;
 
             var playlists = await plOfUser.ExecuteAsync();
 

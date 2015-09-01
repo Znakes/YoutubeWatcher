@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using GalaSoft.MvvmLight.Ioc;
 using Google.Apis.YouTube.v3.Data;
 using Youtube;
@@ -31,18 +32,30 @@ namespace YoutubeWatcher.ViewModel
 
         private async Task<IEnumerable<PlaylistItem>> GetPlaylistItems(CancellationToken cancellationToken)
         {
+
             var plId = Playlist.Id;
 
             var you = SimpleIoc.Default.GetInstance<YInfoRetriever>();
 
             if (you.IsAuthorized)
             {
-                var res = await you.GetPlayListItems(plId, cancellationToken);
+                var res = await you.GetPlayListItems(plId, cancellationToken, ReportProgress);
 
                 return res.OrderByDescending(r=>r.Snippet.PublishedAt.Value.Date);
             }
             return null;
         }
+
+        private void ReportProgress(double progress)
+        {
+            var mvm = SimpleIoc.Default.GetInstance<MainViewModel>();
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                mvm.Status = Math.Round(progress, 1).ToString() + "% progress.";
+            });
+
+        }
+
 
         public async Task RefreshPlayListItems(CancellationToken cancellationToken)
         {
