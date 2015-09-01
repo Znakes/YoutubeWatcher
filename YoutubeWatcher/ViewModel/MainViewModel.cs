@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.Contracts;
-using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using GalaSoft.MvvmLight;
@@ -46,6 +48,7 @@ namespace YoutubeWatcher.ViewModel
 
             youRetriever = SimpleIoc.Default.GetInstance<YInfoRetriever>();
             Subscriptions = new ObservableCollection<ChannelEx>();
+            WatchedItems = new List<PlaylistItem>(1000);
             Connect().ConfigureAwait(false);
             Contract.ContractFailed += Contract_ContractFailed;
         }
@@ -57,9 +60,22 @@ namespace YoutubeWatcher.ViewModel
             //MessengerInstance.Send(new NotificationMessage(e.Message));
         }
 
-        #region Properties
+        #region FIELDS
 
         private string _status = "Not Connected";
+        private bool _isConnected;
+        private RelayCommand _connect;
+        private RelayCommand _subscriptions;
+        private PlaylistEx _currentPlaylist;
+        private PlaylistItem _currentPlaylistItem;
+        private ChannelEx _currentChannel;
+        private RelayCommand _getNext;
+        private RelayCommand _getWatched;
+        private ObservableCollection<ChannelEx> _channels;
+
+        #endregion
+
+        #region Properties
 
         public string Status
         {
@@ -71,7 +87,6 @@ namespace YoutubeWatcher.ViewModel
             }
         }
 
-        private bool _isConnected;
 
         public bool IsConnected
         {
@@ -83,10 +98,9 @@ namespace YoutubeWatcher.ViewModel
             }
         }
 
-        private PlaylistEx _currentPlaylist;
 
         /// <summary>
-        /// Gets or sets current selected PlayList
+        ///     Gets or sets current selected PlayList
         /// </summary>
         public PlaylistEx CurrentPlaylist
         {
@@ -98,10 +112,9 @@ namespace YoutubeWatcher.ViewModel
             }
         }
 
-        private PlaylistItem _currentPlaylistItem;
 
         /// <summary>
-        /// Gets or sets current selected playlist item (video)
+        ///     Gets or sets current selected playlist item (video)
         /// </summary>
         public PlaylistItem CurrentPlaylistItem
         {
@@ -110,28 +123,36 @@ namespace YoutubeWatcher.ViewModel
             {
                 _currentPlaylistItem = value;
                 RaisePropertyChanged();
-            }
-        }
-
-
-        private PlaylistItem _currentChannel;
-
-        /// <summary>
-        /// Gets or sets current selected channel
-        /// </summary>
-        public PlaylistItem CurrentChannel
-        {
-            get { return _currentChannel; }
-            set
-            {
-                _currentChannel = value;
                 RaisePropertyChanged();
             }
         }
 
 
+        /// <summary>
+        ///     Gets or sets current selected channel
+        /// </summary>
+        public ChannelEx CurrentChannel
+        {
+            get { return _currentChannel; }
+            set
+            {
+;
+                _currentChannel = value;
+                RaisePropertyChanged();
+            }
+        }
 
-        public ObservableCollection<ChannelEx> Subscriptions { get; set; }
+        public List<PlaylistItem> WatchedItems { get; set; }
+
+        public ObservableCollection<ChannelEx> Subscriptions
+        {
+            get { return _channels; }
+            set
+            {
+                _channels = value; 
+                RaisePropertyChanged();
+            }
+        }
 
         #endregion
 
@@ -142,7 +163,6 @@ namespace YoutubeWatcher.ViewModel
         /// </summary>
         private async Task Connect()
         {
-            IsConnected = false;
             if (youRetriever.IsAuthorized)
                 youRetriever.Disconnect();
 
@@ -162,9 +182,58 @@ namespace YoutubeWatcher.ViewModel
                 Status = "Authorizated failed";
                 IsConnected = false;
             }
-
-            
         }
+
+        private void GetNext()
+        {
+            //await Task.Run(() =>
+            //{
+                if (IsConnected && CurrentPlaylist != null)
+                {
+                    if (CurrentPlaylistItem == null)
+                        CurrentPlaylistItem = CurrentPlaylist.PlaylistItems.First();
+
+                    if(!WatchedItems.Contains(CurrentPlaylistItem))
+                        WatchedItems.Add(CurrentPlaylistItem);
+
+                    var startIndex = CurrentPlaylist.PlaylistItems.IndexOf(CurrentPlaylistItem);
+                    bool foundUnwatched = false;
+                    for (int i = startIndex+1; i < CurrentPlaylist.PlaylistItems.Count; i++)
+                    {
+                        if (!WatchedItems.Contains(CurrentPlaylist.PlaylistItems[i]))
+                        {
+                            foundUnwatched = true;
+                            CurrentPlaylistItem = CurrentPlaylist.PlaylistItems[i];
+                            break;
+                        }
+                    }
+
+                    if (!foundUnwatched)
+                    {
+                        for (int i = 0; i < startIndex-1; i++)
+                        {
+                            if (!WatchedItems.Contains(CurrentPlaylist.PlaylistItems[i]))
+                            {
+                                foundUnwatched = true;
+                                
+                                CurrentPlaylistItem = CurrentPlaylist.PlaylistItems[i];
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!foundUnwatched)
+                    {
+                        Status = "Cannot find unwatched video";
+                    }
+                    else
+                    {
+                        Status = "Ok!";
+                    }
+                }
+            //});
+        }
+
 
         private async Task GetSubscriptions()
         {
@@ -176,23 +245,45 @@ namespace YoutubeWatcher.ViewModel
                 return;
             }
 
+            Subscriptions.Clear();
+            Subscriptions = new ObservableCollection<ChannelEx>();
+
             var subscriptions = await youRetriever.GetSubscriptions();
             var channels = await youRetriever.GetChannelsFromSubscriptions(subscriptions);
-            
-            Subscriptions.Clear();
+            await GetWatched();
+
 
             foreach (var channel in channels)
             {
                 var ex = new ChannelEx {Channel = channel};
                 Subscriptions.Add(ex);
             }
+
+            var channelEx = Subscriptions.FirstOrDefault();
+            if (channelEx != null) CurrentChannel = channelEx;
+        }
+
+        private async Task GetWatched()
+        {
+            //Contract.Assert(youRetriever != null && youRetriever.IsAuthorized);
+
+            if (youRetriever == null || !youRetriever.IsAuthorized)
+            {
+                Status = "Yor arent authorized! Please, press Connect first";
+                return;
+            }
+
+            var yourChannel = await youRetriever.GetOwnChannel();
+            var watched = await
+                youRetriever.GetPlayListItems(yourChannel.ContentDetails.RelatedPlaylists.WatchHistory,
+                    CancellationToken.None);
+            WatchedItems.Clear();
+            WatchedItems.AddRange(watched);
         }
 
         #endregion
 
         #region Commands
-
-        private RelayCommand _connect;
 
         public ICommand ConnectCommand
         {
@@ -203,8 +294,6 @@ namespace YoutubeWatcher.ViewModel
         }
 
 
-        private RelayCommand _subscriptions;
-
         public ICommand SubscriptionsCommand
         {
             get
@@ -212,6 +301,21 @@ namespace YoutubeWatcher.ViewModel
                 return
                     (_subscriptions =
                         _subscriptions ?? new RelayCommand(async () => { await GetSubscriptions(); }, () => IsConnected));
+            }
+        }
+
+        public ICommand GetNextCommand
+        {
+            get
+            {
+                return (_getNext = _getNext ?? new RelayCommand( () => { GetNext(); }, () => IsConnected));
+            }
+        }
+        public ICommand RefreshWatchedCommand
+        {
+            get
+            {
+                return (_getWatched= _getWatched ?? new RelayCommand(async () => { await this.GetWatched(); }, () => IsConnected));
             }
         }
 

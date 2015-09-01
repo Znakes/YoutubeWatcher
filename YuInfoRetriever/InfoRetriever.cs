@@ -196,6 +196,20 @@ namespace Youtube
             return playlists.Items.ToArray();
         }
 
+        public async Task<Channel> GetOwnChannel()
+        {
+            Contract.Assert(_youtubeService != null);
+            Contract.Assert(IsAuthorized);
+
+            var channelsService = _youtubeService.Channels.List("snippet,contentDetails");
+            channelsService.Mine = true;
+
+            var channel = await channelsService.ExecuteAsync();
+
+            return channel.Items.First();
+        } 
+
+
 
 
     }

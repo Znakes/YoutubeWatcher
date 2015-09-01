@@ -19,6 +19,7 @@
                     <MultiTrigger.Conditions>
                         <Condition Property="SelectedItem"
                                    Value="{x:Null}" />
+                        
                         <Condition Property="HasItems"
                                    Value="True" />
                     </MultiTrigger.Conditions>
@@ -51,26 +52,25 @@
             <ColumnDefinition Width="1*" />
             <ColumnDefinition Width="40" />
         </Grid.ColumnDefinitions>
-        <StatusBar Background="#FFA62525" Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="4">
-            <Label Foreground="White" FontWeight="SemiBold" Content="{Binding Status}" />
+        <StatusBar Background="#FFA62525" Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="3">
+            <Label Width="250" Foreground="White" FontWeight="SemiBold" Content="{Binding Status}" />
         </StatusBar>
 
         <WrapPanel Orientation="Horizontal" Background="#FFA62525" Grid.Row="0" Grid.Column="1">
-            <Image Margin="10,5" RenderOptions.BitmapScalingMode="HighQuality" Source="Resources/Images/YouTube.png"
-                   Width="40" />
-                <Button BorderThickness="0" Padding="5" Command="{Binding SubscriptionsCommand}" Height="40" Width="40"
-                        Foreground="White" Margin="10,0" Background="{x:Null}">
-                    <Button.Content>
-                        <Image Source="Resources/Images/Refresh.png" Stretch="UniformToFill" Opacity="0.7" />
-                    </Button.Content>
-                </Button>
+            <Image Margin="0,5,5,0" RenderOptions.BitmapScalingMode="HighQuality" Source="Resources/Images/YouTube.png" Width="40" />
+            <ToggleButton Name="SettingsBorder" Margin="10,5" BorderThickness="1" BorderBrush="White" Background="#FFA62525">
+                <StackPanel Orientation="Horizontal">
+                    <Image  RenderOptions.BitmapScalingMode="HighQuality" Source="Resources/Images/setttings.png" Width="30" />
+                </StackPanel>
+            </ToggleButton>
+            <GridSplitter Width="2" Margin="5,0,10,0"/>
                 <!--<MenuItem Header="Connect">
                 <MenuItem Command="{Binding ConnectCommand}" Header="Connect" />
                 <MenuItem Command="{Binding SubscriptionsCommand}" Header="Refresh" />
             </MenuItem>-->
                 <!--<Image Height="20" Source="Resources/Images/Arrow.png" Margin="5,0,15,0" />-->
                 <!-- Channels list !-->
-                <ComboBox Margin="0,5" Height="40" VerticalContentAlignment="Center" Padding="0" SelectedIndex="0"
+                <ComboBox Style="{StaticResource HideableComboBox}" Margin="0,5" Height="40" VerticalContentAlignment="Center" Padding="0" SelectedIndex="0"
                           SelectedItem="{Binding Source={StaticResource Locator}, Path=Main.CurrentChannel}"
                           SelectionChanged="Selector_OnSelectionChanged" ItemsSource="{Binding Subscriptions}"
                           IsSynchronizedWithCurrentItem="True">
@@ -94,7 +94,7 @@
                             <!-- Playlists list !-->
                             <ComboBox Name="Box" Style="{StaticResource HideableComboBox}" SelectedIndex="0"
                                           MinWidth="50"
-                                          SelectedItem="{Binding Source={StaticResource Locator}, Path=Main.CurrentPlaylist}"
+                                          SelectedItem="{Binding Source={StaticResource Locator}, Path=Main.CurrentChannel, Mode=TwoWay}"
                                           SelectionChanged="PlaylistListBox_OnSelectionChanged"
                                           ItemsSource="{Binding Playlists}" IsSynchronizedWithCurrentItem="True">
                                 <ComboBox.ItemTemplate>
@@ -146,10 +146,7 @@
                 </ContentControl.ContentTemplate>
             </ContentControl>
         </WrapPanel>
-
         <WebBrowser Name="Browser" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="1" Margin="0,0,0,0" Grid.RowSpan="2" />
-
-
         <Button Panel.ZIndex="3" Grid.Row="0" Grid.RowSpan="4" Grid.Column="0"
                 Style="{StaticResource FadeOutButtonStyle}">
             <Image Source="Resources/Images/arrowLeft.png">
@@ -158,10 +155,33 @@
                 </Image.LayoutTransform>
             </Image>
         </Button>
-
-        <Button Panel.ZIndex="3" Style="{StaticResource FadeOutButtonStyle}" Grid.Row="0" Grid.Column="2"
+        <Button Command="{Binding GetNextCommand}" Panel.ZIndex="3" Style="{StaticResource FadeOutButtonStyle}" Grid.Row="0" Grid.Column="2"
                 Grid.RowSpan="4">
             <Image Source="Resources/Images/arrowLeft.png" />
         </Button>
+
+
+        <Popup StaysOpen="False" AllowsTransparency="True" IsOpen="{Binding ElementName=SettingsBorder, Path=IsChecked}" PopupAnimation="Fade" PlacementTarget="{Binding ElementName=SettingsBorder}" Placement="Bottom"  >
+            <Border BorderThickness="1" BorderBrush="White">
+            <StackPanel Background="#FFA62525" >
+                    <Button Width="150" Margin="5" Background="Transparent" Command="{Binding RefreshWatchedCommand}" >
+                <StackPanel Orientation="Horizontal">
+                    <Image Width="20" Source="Resources/Images/Refresh.png"></Image>
+                    <Label Foreground="White">Refresh watched</Label>
+                </StackPanel>
+                </Button>
+                <Button Width="150" BorderThickness="0" Padding="5" Command="{Binding SubscriptionsCommand}" Height="40" 
+                    Foreground="White" Margin="10,0" Background="{x:Null}">
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <Image Width="20" Height="20" Source="Resources/Images/Refresh.png" Stretch="UniformToFill" Opacity="0.7" />
+                            <Label Foreground="White">Refresh sources</Label>
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
+                    <CheckBox HorizontalContentAlignment="Center" Width="150" Margin="5"  Foreground="White">Mark as viewed</CheckBox>
+            </StackPanel>
+            </Border>
+        </Popup>
     </Grid>
 </Window>
