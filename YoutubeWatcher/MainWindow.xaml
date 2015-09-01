@@ -4,8 +4,10 @@
         xmlns:viewModel="clr-namespace:YoutubeWatcher.ViewModel"
         xmlns:youtubeWatcher="clr-namespace:YoutubeWatcher"
         xmlns:behaviours="clr-namespace:YoutubeWatcher.Behaviours"
+        WindowState="Maximized"
         BorderBrush="Black" BorderThickness="1"
         Background="#FFA62525"
+        KeyDown="MainWindow_OnKeyDown"
         Icon="Resources/Images/logo.png"
         DataContext="{Binding Source={StaticResource Locator}, Path=Main}"
         Title="MainWindow" Height="700" Width="900" Loaded="MainWindow_OnLoaded">
@@ -78,7 +80,7 @@
                         <DataTemplate DataType="viewModel:ChannelEx">
                             <StackPanel Orientation="Horizontal">
                                 <Image Margin="10,0" Width="auto" Height="20"
-                                       Source="{Binding Channel.Snippet.Thumbnails.Default__.Url}" />
+                                       Source="{Binding Channel.Snippet.Thumbnails.Default__.Url, IsAsync=True}" />
                                 <Label VerticalAlignment="Center" Content="{Binding Channel.Snippet.Title}" />
                             </StackPanel>
                         </DataTemplate>
@@ -101,7 +103,7 @@
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
                                             <Image Width="auto" Height="40"
-                                                       Source="{Binding Playlist.Snippet.Thumbnails.Default__.Url}" />
+                                                       Source="{Binding Playlist.Snippet.Thumbnails.Default__.Url, IsAsync=True}" />
                                             <Label Content="{Binding Playlist.Snippet.Title}" />
                                         </StackPanel>
                                     </DataTemplate>
@@ -128,10 +130,10 @@
                                                         <StackPanel Orientation="Horizontal">
                                                             <StackPanel.ToolTip>
                                                                 <Image
-                                                                        Source="{Binding Snippet.Thumbnails.High.Url}" />
+                                                                        Source="{Binding Snippet.Thumbnails.High.Url, IsAsync=True}" />
                                                             </StackPanel.ToolTip>
                                                             <Image Width="auto" Height="50"
-                                                                       Source="{Binding Snippet.Thumbnails.Default__.Url}" />
+                                                                       Source="{Binding Snippet.Thumbnails.Default__.Url, IsAsync=True}" />
                                                             <Label Content="{Binding Snippet.Title}" />
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -147,7 +149,7 @@
             </ContentControl>
         </WrapPanel>
         <WebBrowser Name="Browser" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="1" Margin="0,0,0,0" Grid.RowSpan="2" />
-        <Button Panel.ZIndex="3" Grid.Row="0" Grid.RowSpan="4" Grid.Column="0"
+        <Button Visibility="Collapsed" Panel.ZIndex="3" Grid.Row="0" Grid.RowSpan="4" Grid.Column="0"
                 Style="{StaticResource FadeOutButtonStyle}">
             <Image Source="Resources/Images/arrowLeft.png">
                 <Image.LayoutTransform>
@@ -170,17 +172,37 @@
                     <Label Foreground="White">Refresh watched</Label>
                 </StackPanel>
                 </Button>
-                <Button Width="150" BorderThickness="0" Padding="5" Command="{Binding SubscriptionsCommand}" Height="40" 
-                    Foreground="White" Margin="10,0" Background="{x:Null}">
+                    <Button Width="150" BorderThickness="0" Padding="5" Command="{Binding SubscriptionsCommand}" Height="40" 
+                    Foreground="White" Margin="10,0" Background="Transparent">
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <Image Width="20" Height="20" Source="Resources/Images/Refresh.png" Stretch="UniformToFill"  />
+                                <Label Foreground="White">Refresh sources</Label>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+                
+                    <Button Width="150" BorderThickness="0" Padding="5" Command="{Binding ConnectCommand}" Height="40" 
+                    Foreground="White" Margin="10,0" Background="Transparent">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
-                            <Image Width="20" Height="20" Source="Resources/Images/Refresh.png" Stretch="UniformToFill" Opacity="0.7" />
-                            <Label Foreground="White">Refresh sources</Label>
+                            <Image Width="20" Height="20" Source="Resources/Images/connect.png" Stretch="UniformToFill"  />
+                            <Label Foreground="White">Connect</Label>
                         </StackPanel>
                     </Button.Content>
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Style.Triggers>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
                 </Button>
-                    <CheckBox HorizontalContentAlignment="Center" Width="150" Margin="5"  Foreground="White">Mark as viewed</CheckBox>
-            </StackPanel>
+                    <!--<CheckBox HorizontalContentAlignment="Center" Width="150" Margin="5"  Foreground="White">Mark as viewed</CheckBox>-->
+                    <CheckBox HorizontalContentAlignment="Center" Width="150" Margin="5" IsChecked="{Binding PlayRandomly, Mode=TwoWay}" Foreground="White">Play shuffled</CheckBox>
+                </StackPanel>
             </Border>
         </Popup>
     </Grid>

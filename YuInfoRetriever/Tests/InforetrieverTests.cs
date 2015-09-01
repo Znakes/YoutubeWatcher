@@ -49,7 +49,6 @@ namespace YuInfoRetriever.Tests
             Assert.IsNotNull(sub);
         }
 
-
         [TestMethod]
         public async Task CheckGettingPlaylists()
         {
@@ -99,9 +98,8 @@ namespace YuInfoRetriever.Tests
             Assert.IsNotNull(items);
         }
 
-
         [TestMethod]
-        public async Task CheckIntersection()
+        public async Task CheckIntersectionWithWatchedVideos()
         {
             var manager = new YInfoRetriever();
 
@@ -129,7 +127,7 @@ namespace YuInfoRetriever.Tests
 
             var watched = await manager.GetPlayListItems(me.ContentDetails.RelatedPlaylists.WatchHistory, CancellationToken.None);
 
-            var someItersection = watched.Select(w=>w.Id).Intersect(items.Select(i=>i.Id));
+            var someItersection = watched.Select(w=>w.Snippet.ResourceId.VideoId).Intersect(items.Select(i=>i.Snippet.ResourceId.VideoId));
 
 
             foreach (var item in someItersection)

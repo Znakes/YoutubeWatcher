@@ -50,15 +50,8 @@ namespace YoutubeWatcher.ViewModel
             Subscriptions = new ObservableCollection<ChannelEx>();
             WatchedItems = new List<string>(1000);
             Connect().ConfigureAwait(false);
-            Contract.ContractFailed += Contract_ContractFailed;
         }
 
-        private void Contract_ContractFailed(object sender, ContractFailedEventArgs e)
-        {
-            //e.SetUnwind();
-            ContractHelper.TriggerFailure(ContractFailureKind.Assert, "Fail!", "Message!", "Condition!", new Exception());
-            //MessengerInstance.Send(new NotificationMessage(e.Message));
-        }
 
         #region FIELDS
 
@@ -72,6 +65,7 @@ namespace YoutubeWatcher.ViewModel
         private RelayCommand _getNext;
         private RelayCommand _getWatched;
         private ObservableCollection<ChannelEx> _channels;
+        private bool _playRandomly;
 
         #endregion
 
@@ -83,6 +77,19 @@ namespace YoutubeWatcher.ViewModel
             set
             {
                 _status = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        /// <summary>
+        ///     Use shuffling
+        /// </summary>
+        public bool PlayRandomly
+        {
+            get { return _playRandomly; }
+            set
+            {
+                _playRandomly = value;
                 RaisePropertyChanged();
             }
         }
@@ -136,7 +143,7 @@ namespace YoutubeWatcher.ViewModel
             get { return _currentChannel; }
             set
             {
-;
+                ;
                 _currentChannel = value;
                 RaisePropertyChanged();
             }
@@ -149,7 +156,7 @@ namespace YoutubeWatcher.ViewModel
             get { return _channels; }
             set
             {
-                _channels = value; 
+                _channels = value;
                 RaisePropertyChanged();
             }
         }
@@ -188,17 +195,48 @@ namespace YoutubeWatcher.ViewModel
         {
             //await Task.Run(() =>
             //{
-                if (IsConnected && CurrentPlaylist != null)
+            if (IsConnected && CurrentPlaylist != null)
+            {
+                if (CurrentPlaylistItem == null)
+                    CurrentPlaylistItem = CurrentPlaylist.PlaylistItems.First();
+
+                if (!WatchedItems.Contains(CurrentPlaylistItem.Snippet.ResourceId.VideoId))
+                    WatchedItems.Add(CurrentPlaylistItem.Snippet.ResourceId.VideoId);
+
+                var startIndex = CurrentPlaylist.PlaylistItems.IndexOf(CurrentPlaylistItem);
+                var foundUnwatched = false;
+
+
+                if (PlayRandomly)
                 {
-                    if (CurrentPlaylistItem == null)
-                        CurrentPlaylistItem = CurrentPlaylist.PlaylistItems.First();
 
-                    if(!WatchedItems.Contains(CurrentPlaylistItem.Snippet.ResourceId.VideoId))
-                        WatchedItems.Add(CurrentPlaylistItem.Snippet.ResourceId.VideoId);
+                    List<int> arrayOfIds = new List<int>(CurrentPlaylist.PlaylistItems.Count);
 
-                    var startIndex = CurrentPlaylist.PlaylistItems.IndexOf(CurrentPlaylistItem);
-                    bool foundUnwatched = false;
-                    for (int i = startIndex+1; i < CurrentPlaylist.PlaylistItems.Count; i++)
+                    for (int i = 0; i < CurrentPlaylist.PlaylistItems.Count; i++)
+                    {
+                        arrayOfIds.Add(i);   
+                    }
+                    var rand = new Random((int) DateTime.Now.ToFileTimeUtc());
+                    
+                    while (arrayOfIds.Any())
+                    {
+                        var id = rand.Next(0, arrayOfIds.Count);
+
+                        if (!WatchedItems.Contains(CurrentPlaylist.PlaylistItems[id].Snippet.ResourceId.VideoId))
+                        {
+                            foundUnwatched = true;
+                            CurrentPlaylistItem = CurrentPlaylist.PlaylistItems[id];
+                            break;
+                        }
+                        else
+                        {
+                            arrayOfIds.Remove(id);
+                        }
+                    }
+                }
+                else
+                {
+                    for (var i = startIndex + 1; i < CurrentPlaylist.PlaylistItems.Count; i++)
                     {
                         if (!WatchedItems.Contains(CurrentPlaylist.PlaylistItems[i].Snippet.ResourceId.VideoId))
                         {
@@ -210,33 +248,28 @@ namespace YoutubeWatcher.ViewModel
 
                     if (!foundUnwatched)
                     {
-                        for (int i = 0; i < startIndex-1; i++)
+                        for (var i = 0; i < startIndex - 1; i++)
                         {
                             if (!WatchedItems.Contains(CurrentPlaylist.PlaylistItems[i].Snippet.ResourceId.VideoId))
                             {
                                 foundUnwatched = true;
-                                
+
                                 CurrentPlaylistItem = CurrentPlaylist.PlaylistItems[i];
                                 break;
                             }
                         }
                     }
-
-                    if (!foundUnwatched)
-                    {
-                        Status = "Cannot find unwatched video";
-                    }
-                    else
-                    {
-                        Status = "Ok!";
-                    }
                 }
+
+                Status = !foundUnwatched ? "Cannot find unwatched video" : "Enjoy!";
+            }
             //});
         }
 
 
         private async Task GetSubscriptions()
         {
+            Status = "Getting channels";
             //Contract.Assert(youRetriever != null && youRetriever.IsAuthorized);
 
             if (youRetriever == null || !youRetriever.IsAuthorized)
@@ -261,11 +294,13 @@ namespace YoutubeWatcher.ViewModel
 
             var channelEx = Subscriptions.FirstOrDefault();
             if (channelEx != null) CurrentChannel = channelEx;
+            Status = "Channels list updated";
         }
 
         private async Task GetWatched()
         {
             //Contract.Assert(youRetriever != null && youRetriever.IsAuthorized);
+            Status = "Getting watched videos";
 
             if (youRetriever == null || !youRetriever.IsAuthorized)
             {
@@ -278,7 +313,9 @@ namespace YoutubeWatcher.ViewModel
                 youRetriever.GetPlayListItems(yourChannel.ContentDetails.RelatedPlaylists.WatchHistory,
                     CancellationToken.None);
             WatchedItems.Clear();
-            WatchedItems.AddRange(watched.Select(w=>w.Snippet.ResourceId.VideoId));
+            WatchedItems.AddRange(watched.Select(w => w.Snippet.ResourceId.VideoId));
+
+            Status = "Watched history updated";
         }
 
         #endregion
@@ -306,16 +343,16 @@ namespace YoutubeWatcher.ViewModel
 
         public ICommand GetNextCommand
         {
-            get
-            {
-                return (_getNext = _getNext ?? new RelayCommand( () => { GetNext(); }, () => IsConnected));
-            }
+            get { return (_getNext = _getNext ?? new RelayCommand(() => { GetNext(); }, () => IsConnected)); }
         }
+
         public ICommand RefreshWatchedCommand
         {
             get
             {
-                return (_getWatched= _getWatched ?? new RelayCommand(async () => { await this.GetWatched(); }, () => IsConnected));
+                return
+                    (_getWatched =
+                        _getWatched ?? new RelayCommand(async () => { await GetWatched(); }, () => IsConnected));
             }
         }
 

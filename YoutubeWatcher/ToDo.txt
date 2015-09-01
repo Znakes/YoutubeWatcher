@@ -1,0 +1,3 @@
+﻿1. Remove standart blue higlightning.
+2. Think about UX
+3. 

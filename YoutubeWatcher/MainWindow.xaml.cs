@@ -7,6 +7,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
+using System.Windows.Input;
+using GalaSoft.MvvmLight.Ioc;
 using Google.Apis.YouTube.v3.Data;
 using Youtube;
 using YoutubeWatcher.ErrorHandler;
@@ -91,6 +93,18 @@ namespace YoutubeWatcher
             {
                 listBox.SelectedIndex = 0;
             }
+        }
+
+        private void MainWindow_OnKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Right)
+            {
+                e.Handled = true;
+                var mvm = SimpleIoc.Default.GetInstance<MainViewModel>();
+                if (mvm.GetNextCommand.CanExecute(null))
+                    mvm.GetNextCommand.Execute(null);
+            }
+
         }
     }
 }
