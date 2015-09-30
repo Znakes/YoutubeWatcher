@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
@@ -196,7 +197,7 @@ namespace YoutubeWatcher.ViewModel
         {
             //await Task.Run(() =>
             //{
-            if (!WatchedItems.Any())
+            if (!WatchedItems.Any() || CurrentPlaylist == null || CurrentPlaylist.PlaylistItems == null || !CurrentPlaylist.PlaylistItems.Any())
                 return;
 
 
@@ -314,13 +315,28 @@ namespace YoutubeWatcher.ViewModel
             }
 
             var yourChannel = await youRetriever.GetOwnChannel();
-            var watched = await
-                youRetriever.GetPlayListItems(yourChannel.ContentDetails.RelatedPlaylists.WatchHistory,
-                    CancellationToken.None);
-            WatchedItems.Clear();
-            WatchedItems.AddRange(watched.Select(w => w.Snippet.ResourceId.VideoId));
+
+            ThreadPool.QueueUserWorkItem(async(a) =>
+            {
+                var watched = await
+                    youRetriever.GetPlayListItems(yourChannel.ContentDetails.RelatedPlaylists.WatchHistory,
+                        CancellationToken.None, ReportProgress);
+                WatchedItems.Clear();
+                WatchedItems.AddRange(watched.Select(w => w.Snippet.ResourceId.VideoId));
+            });
 
             Status = "Watched history updated";
+        }
+
+
+        private void ReportProgress(double progress)
+        {
+            var mvm = SimpleIoc.Default.GetInstance<MainViewModel>();
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                mvm.Status = Math.Round(progress, 1).ToString() + "% progress.";
+            });
+
         }
 
         #endregion
